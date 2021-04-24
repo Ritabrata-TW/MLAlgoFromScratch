@@ -1,3 +1,6 @@
+from math import sqrt
+
+import numpy as np
 import pandas as pd
 
 
@@ -49,11 +52,38 @@ def estimate_parameters(df):
     return b0, b1
 
 
+def train_test_split(df, split_ratio):
+    df['rand_index'] = np.random.randint(0, 100, len(df))
+
+    train_df = df[df['rand_index'] < split_ratio * 100].drop(columns='rand_index')
+    test_df = df[df['rand_index'] >= split_ratio * 100].drop(columns='rand_index')
+
+    return train_df, test_df
+
+
+def predict_for_test_data(test_data, b0, b1):
+    test_data['predicted_Y'] = b0 + test_data['X'] * b1
+    return test_data
+
+
+def calculate_rmse(predictions):
+    predictions['error'] = predictions['predicted_Y'] - predictions['Y']
+    predictions['sq_error'] = predictions['error'] ** 2
+
+    mean_error = np.mean(predictions['sq_error'])
+    return sqrt(mean_error)
+
+
 def main():
     df = load_and_examine_data()
+    train_data, test_data = train_test_split(df, 0.6)
+    print(df.shape, train_data.shape, test_data.shape)
 
-    linear_regression_parameters = estimate_parameters(df)
-    print(linear_regression_parameters)
+    b0, b1 = estimate_parameters(train_data)
+
+    predictions = predict_for_test_data(test_data, b0, b1)
+    rmse = calculate_rmse(predictions)
+    print(rmse)
 
 
 if __name__ == '__main__':
