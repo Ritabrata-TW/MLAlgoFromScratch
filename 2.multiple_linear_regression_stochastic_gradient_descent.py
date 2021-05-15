@@ -43,7 +43,7 @@ def main():
     # print(df_1)
 
     l_rate = 0.01
-    n_epoch = 50
+    n_epoch = 1000
 
     coef = coefficients_sgd(df_1, l_rate, n_epoch)
     print(coef)
