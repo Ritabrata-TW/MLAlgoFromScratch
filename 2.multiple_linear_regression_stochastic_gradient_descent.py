@@ -11,10 +11,10 @@ def predict(arr, coef):
 
 
 def coefficients_sgd(df, l_rate, n_epoch):
-    coef = [0.0 for n in range(0, df.shape[1])]
+    coef = [0.0 for _ in range(0, df.shape[1])]
 
     for n in range(0, n_epoch):
-        sum_error = 0
+        sum_error = 0.0
 
         for row in df.values:
             yhat = predict(row, coef)
@@ -25,18 +25,27 @@ def coefficients_sgd(df, l_rate, n_epoch):
             coef[0] = coef[0] - error * l_rate
 
             for col_index in range(len(row) - 1):
-                coef[col_index + 1] = coef[col_index + 1] - row[col_index] * l_rate * error
+                coef[col_index + 1] = coef[col_index + 1] - (row[col_index] * l_rate * error)
 
-            print(f"Epoch# = {n} lrate = {l_rate}, error = {sum_error}")
+        print(f"Epoch# = {n} lrate = {l_rate}, error = {sum_error}")
+
     return coef
 
 
+def min_max_normalise(df):
+    df = (df - df.mean()) / (df.max() - df.min())
+    return df
+
+
 def main():
-    df = pd.DataFrame({'x': [1, 2, 4, 3, 5], 'y': [1, 3, 3, 2, 5]})
-    l_rate = 0.001
+    df = pd.read_csv('/Users/ritabrata/Learn/ML_Algo_From_Scratch/data/WineQuality.csv')
+    df_1 = min_max_normalise(df)
+    # print(df_1)
+
+    l_rate = 0.01
     n_epoch = 50
 
-    coef = coefficients_sgd(df, l_rate, n_epoch)
+    coef = coefficients_sgd(df_1, l_rate, n_epoch)
     print(coef)
 
 
