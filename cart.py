@@ -25,7 +25,7 @@ def gini_index(groups, target_classes):
     return total_gini_index
 
 
-def split(dataset, index, value):
+def test_split(dataset, index, value):
     left, right = [], []
 
     for row in dataset:
@@ -42,7 +42,7 @@ def get_split(dataset):
 
     for row_index in range(len(dataset)):
         for col_index in range(len(dataset[0]) - 1):
-            left, right = split(dataset, col_index, dataset[row_index][col_index])
+            left, right = test_split(dataset, col_index, dataset[row_index][col_index])
             # print(f"Splitting at {row_index} - {col_index}. Value of split - {dataset[row_index][col_index]}")
             # print("left -> ", left)
             # print("right ->", right)
@@ -72,6 +72,65 @@ def get_split(dataset):
     }
 
 
+def to_terminal(group):
+    outcomes = [row[-1] for row in group]
+
+    return max(outcomes, key=outcomes.count)
+
+
+def split(node, max_depth, min_size, depth):
+    left, right = node['groups']
+    del (node['groups'])
+
+    if not left or not right:
+        node['left'] = node['right'] = to_terminal(left + right)
+        return
+
+    if depth > max_depth:
+        node['left'], node['right'] = to_terminal(left), to_terminal(right)
+        return
+
+    if len(left) < min_size:
+        node['left'] = to_terminal(left)
+    else:
+        node['left'] = get_split(left)
+        split(node['left'], max_depth, min_size, depth + 1)
+
+    if len(right) < min_size:
+        node['right'] = to_terminal(right)
+    else:
+        node['right'] = get_split(right)
+        split(node['right'], max_depth, min_size, depth + 1)
+
+
+def build_tree(train, max_depth, min_size):
+    root_node = get_split(train)
+    split(root_node, max_depth, min_size, 1)
+    return root_node
+
+
+def print_tree(node, depth=0):
+    if isinstance(node, dict):
+        print('%s[X%d < %.3f]' % (depth * ' ', (node['column_index'] + 1), node['split_value']))
+        print_tree(node['left'], depth + 1)
+        print_tree(node['right'], depth + 1)
+    else:
+        print('%s[%s]' % (depth * ' ', node))
+
+
+def predict(node, row):
+    if row[node['column_index']] < node['split_value']:
+        if isinstance(node['left'], dict):
+            return predict(node['left'], row)
+        else:
+            return node['left']
+    else:
+        if isinstance(node['right'], dict):
+            return predict(node['right'], row)
+        else:
+            return node['right']
+
+
 def main():
     dataset = [[2.771244718, 1.784783929, 0],
                [1.728571309, 1.169761413, 0],
@@ -84,10 +143,10 @@ def main():
                [10.12493903, 3.234550982, 1],
                [6.642287351, 3.319983761, 1]]
 
-    split_dict = get_split(dataset)
-    print('Split: [X%d < %.3f] with gini index %.3f' % (
-        (split_dict['column_index'] + 1), split_dict['split_value'], split_dict['min_gini_index']
-    ))
+    tree = build_tree(dataset, 3, 3)
+    print_tree(tree)
+    predicted = [predict(tree, row) for row in dataset]
+    print(predicted)
 
 
 if __name__ == '__main__':
