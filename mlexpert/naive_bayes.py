@@ -6,7 +6,7 @@ def get_word_likelihood_for_tag_with_laplace_transform(tag, vector, corpus, lapl
         if vector in document:
             num_matches += 1
 
-    return (num_matches + laplace_transform_parameter) / (len(documents_for_tag) + laplace_transform_parameter)
+    return (num_matches + laplace_transform_parameter) / (len(documents_for_tag) + (2 * laplace_transform_parameter))
 
 
 def calc_prob_vector_given_not_tag(tag, vector, corpus):
