@@ -1,4 +1,4 @@
-def calc_prob_vector_given_tag(tag, vector, corpus):
+def get_word_likelihood_for_tag(tag, vector, corpus):
     documents_for_tag = corpus[tag]
 
     num_matches = 0
@@ -20,7 +20,7 @@ def calc_prob_vector_given_not_tag(tag, vector, corpus):
     return num_matches / len(documents_from_other_tags)
 
 
-def calculate_prioirs_for_each_tag(corpus, total_num_documents, unique_tags):
+def calculate_priors_for_each_tag(corpus, total_num_documents, unique_tags):
     prob_tags = {}
     for tag in unique_tags:
         prob_tag = [len(v) / total_num_documents for k, v in corpus.items() if k == tag]
@@ -48,14 +48,19 @@ class MultinomialNB:
         unique_tags = self.articles_per_tag.keys()
         total_num_documents = total_num_documents_in_train(self.articles_per_tag, unique_tags)
 
-        self.tag_prior_map = calculate_prioirs_for_each_tag(self.articles_per_tag, total_num_documents, unique_tags)
+        self.tag_prior_map = calculate_priors_for_each_tag(self.articles_per_tag, total_num_documents, unique_tags)
+
         for tag in unique_tags:
-            prob_vector_given_tag = calc_prob_vector_given_tag(tag, "article", self.articles_per_tag)
-            self.word_likelihood_map[tag] = prob_vector_given_tag
+            word_likelihood_tag = get_word_likelihood_for_tag(tag, "article", self.articles_per_tag)
+            self.word_likelihood_map[tag] = word_likelihood_tag
 
         for tag in unique_tags:
             prob_vector_given_not_tag = calc_prob_vector_given_not_tag(tag, "article", self.articles_per_tag)
             self.prob_vector_given_not_tag_map[tag] = prob_vector_given_not_tag
+
+        print(self.tag_prior_map)
+        print(self.word_likelihood_map)
+        print("Train done")
 
     def predict(self, article):
         unique_tags = self.articles_per_tag.keys()
