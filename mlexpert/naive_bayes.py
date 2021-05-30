@@ -51,15 +51,21 @@ class MultinomialNB:
         self.tag_prior_map = calculate_priors_for_each_tag(self.articles_per_tag, total_num_documents, unique_tags)
 
         for tag in unique_tags:
-            word_likelihood_tag = get_word_likelihood_for_tag(tag, "article", self.articles_per_tag)
-            self.word_likelihood_map[tag] = word_likelihood_tag
+            words_for_tag = sum(self.articles_per_tag[tag], [])
 
-        for tag in unique_tags:
-            prob_vector_given_not_tag = calc_prob_vector_given_not_tag(tag, "article", self.articles_per_tag)
-            self.prob_vector_given_not_tag_map[tag] = prob_vector_given_not_tag
+            self.word_likelihood_map[tag] = {}
+            self.prob_vector_given_not_tag_map[tag] = {}
+
+            for word in words_for_tag:
+                word_likelihood_tag = get_word_likelihood_for_tag(tag, word, self.articles_per_tag)
+                self.word_likelihood_map[tag][word] = word_likelihood_tag
+
+                prob_vector_given_not_tag = calc_prob_vector_given_not_tag(tag, word, self.articles_per_tag)
+                self.prob_vector_given_not_tag_map[tag][word] = prob_vector_given_not_tag
 
         print(self.tag_prior_map)
         print(self.word_likelihood_map)
+        print(self.prob_vector_given_not_tag_map)
         print("Train done")
 
     def predict(self, article):
