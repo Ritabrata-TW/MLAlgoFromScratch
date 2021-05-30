@@ -1,4 +1,4 @@
-def get_word_likelihood_for_tag(tag, vector, corpus):
+def get_word_likelihood_for_tag_with_laplace_transform(tag, vector, corpus, laplace_transform_parameter):
     documents_for_tag = corpus[tag]
 
     num_matches = 0
@@ -6,7 +6,7 @@ def get_word_likelihood_for_tag(tag, vector, corpus):
         if vector in document:
             num_matches += 1
 
-    return num_matches / len(documents_for_tag)
+    return (num_matches + laplace_transform_parameter) / (len(documents_for_tag) + laplace_transform_parameter)
 
 
 def calc_prob_vector_given_not_tag(tag, vector, corpus):
@@ -41,6 +41,7 @@ class MultinomialNB:
         self.articles_per_tag = articles_per_tag  # See question prompt for details.
         self.prob_vector_given_not_tag_map = {}
         self.word_likelihood_map = {}
+        self.laplace_transform_parameter = 1
         self.tag_prior_map = None
         self.train()
 
@@ -51,13 +52,24 @@ class MultinomialNB:
         self.tag_prior_map = calculate_priors_for_each_tag(self.articles_per_tag, total_num_documents, unique_tags)
 
         for tag in unique_tags:
-            words_for_tag = sum(self.articles_per_tag[tag], [])
+            bag_of_words = sum(
+                sum(
+                    list(self.articles_per_tag.values()),
+                    []
+                ),
+                []
+            )
 
             self.word_likelihood_map[tag] = {}
             self.prob_vector_given_not_tag_map[tag] = {}
 
-            for word in words_for_tag:
-                word_likelihood_tag = get_word_likelihood_for_tag(tag, word, self.articles_per_tag)
+            for word in bag_of_words:
+                word_likelihood_tag = get_word_likelihood_for_tag_with_laplace_transform(
+                    tag,
+                    word,
+                    self.articles_per_tag,
+                    self.laplace_transform_parameter
+                )
                 self.word_likelihood_map[tag][word] = word_likelihood_tag
 
                 prob_vector_given_not_tag = calc_prob_vector_given_not_tag(tag, word, self.articles_per_tag)
